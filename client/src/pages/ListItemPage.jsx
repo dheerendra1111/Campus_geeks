@@ -34,6 +34,7 @@ export const ListItemPage = () => {
     category: CATEGORIES[0],
     condition: 'Good',
     pricingType: 'FREE',
+    price: '',
     pricePerDay: '',
     depositAmount: '',
     pickupLocation: 'Central Library / Main Campus Gate',
@@ -102,7 +103,12 @@ export const ListItemPage = () => {
       return;
     }
 
-    if (formData.pricingType === 'RENT_PER_DAY' && (!formData.pricePerDay || formData.pricePerDay <= 0)) {
+    if (formData.pricingType === 'FOR_SALE' && (!formData.price || Number(formData.price) <= 0)) {
+      setFormError('Please specify an exact selling price greater than 0.');
+      return;
+    }
+
+    if (formData.pricingType === 'RENT_PER_DAY' && (!formData.pricePerDay || Number(formData.pricePerDay) <= 0)) {
       setFormError('Please specify a valid daily rental rate greater than 0.');
       return;
     }
@@ -116,8 +122,11 @@ export const ListItemPage = () => {
       data.append('category', formData.category);
       data.append('condition', formData.condition);
       data.append('pricingType', formData.pricingType);
-      data.append('pricePerDay', formData.pricingType === 'RENT_PER_DAY' ? formData.pricePerDay : 0);
-      data.append('depositAmount', formData.depositAmount || 0);
+      
+      const exactPrice = formData.pricingType === 'FOR_SALE' ? Number(formData.price) : 0;
+      data.append('price', exactPrice);
+      data.append('pricePerDay', formData.pricingType === 'RENT_PER_DAY' ? formData.pricePerDay : exactPrice);
+      data.append('depositAmount', formData.pricingType === 'FOR_SALE' ? 0 : (formData.depositAmount || 0));
       data.append('pickupLocation', formData.pickupLocation.trim());
       data.append('description', formData.description.trim());
 
@@ -341,59 +350,49 @@ export const ListItemPage = () => {
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-bold text-emerald-800 text-sm">Lend for Free</span>
+                <span className="font-bold text-emerald-800 text-sm">Lend or Give for Free</span>
                 {formData.pricingType === 'FREE' && (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Help a junior peer for free. Great for textbooks or quick exam equipment.
+                Help a peer for free. Great for notes, reference books, or quick exam items.
               </p>
             </button>
 
             <button
               type="button"
-              onClick={() => setFormData((p) => ({ ...p, pricingType: 'RENT_PER_DAY' }))}
+              onClick={() => setFormData((p) => ({ ...p, pricingType: 'FOR_SALE' }))}
               className={`p-4 rounded-2xl border text-left transition-all ${
-                formData.pricingType === 'RENT_PER_DAY'
+                formData.pricingType === 'FOR_SALE'
                   ? 'border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20'
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-bold text-brand-900 text-sm">Rent per Day</span>
-                {formData.pricingType === 'RENT_PER_DAY' && (
+                <span className="font-bold text-brand-900 text-sm">Sell for an Exact Price</span>
+                {formData.pricingType === 'FOR_SALE' && (
                   <CheckCircle2 className="w-4 h-4 text-brand-600" />
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Charge a small nominal fee (e.g. ₹20/day) for high-value gear.
+                Set a fixed one-time purchase price to sell your gear directly to a peer.
               </p>
             </button>
           </div>
 
-          {formData.pricingType === 'RENT_PER_DAY' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          {formData.pricingType === 'FOR_SALE' && (
+            <div className="pt-2">
               <Input
-                label="Daily Rental Rate (₹)"
-                name="pricePerDay"
+                label="Exact Selling Price (₹)"
+                name="price"
                 type="number"
                 min="1"
-                placeholder="e.g. 25"
-                value={formData.pricePerDay}
+                placeholder="e.g. 450"
+                value={formData.price}
                 onChange={handleChange}
+                helperText="The exact amount a student buyer will pay you upon meeting on campus"
                 required
-              />
-
-              <Input
-                label="Refundable Security Deposit (₹)"
-                name="depositAmount"
-                type="number"
-                min="0"
-                placeholder="e.g. 200"
-                value={formData.depositAmount}
-                onChange={handleChange}
-                helperText="Returned to the borrower once the item is inspected and returned"
               />
             </div>
           )}

@@ -138,6 +138,45 @@ test('Borrow Request Engine & State Machine Suite', async (t) => {
     requestId = data.data._id;
   });
 
+  await t.test('3b. POST /api/requests - successfully creates buy request for FOR_SALE item with exact price and 0 deposit', async () => {
+    // Create for-sale item
+    const saleItemRes = await fetch(`${baseUrl}/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${lenderToken}`,
+      },
+      body: JSON.stringify({
+        title: 'Physics Lab Manual & Notes',
+        description: 'First year completed physics lab manual',
+        category: 'Textbooks & Notes',
+        pricingType: 'FOR_SALE',
+        price: 200,
+      }),
+    });
+    const saleItem = (await saleItemRes.json()).data;
+
+    const buyRes = await fetch(`${baseUrl}/requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${borrowerToken}`,
+      },
+      body: JSON.stringify({
+        itemId: saleItem._id,
+        startDate: '2026-11-01',
+        endDate: '2026-11-02',
+        purpose: 'Need for physics lab study',
+      }),
+    });
+
+    assert.strictEqual(buyRes.status, 201);
+    const buyData = await buyRes.json();
+    assert.strictEqual(buyData.success, true);
+    assert.strictEqual(buyData.data.estimatedCost, 200);
+    assert.strictEqual(buyData.data.depositAmount, 0);
+  });
+
   await t.test('4. PATCH /api/requests/:id/status - rejects unauthorized status transition (borrower trying to approve)', async () => {
     const res = await fetch(`${baseUrl}/requests/${requestId}/status`, {
       method: 'PATCH',

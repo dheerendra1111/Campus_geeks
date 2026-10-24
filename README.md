@@ -113,9 +113,10 @@ stateDiagram-v2
   condition: { type: String, enum: ["Brand New", "Like New", "Good", "Fair"] },
   images: [{ type: String }],
   owner: { type: ObjectId, ref: 'User', required: true, index: true },
-  pricingType: { type: String, enum: ["FREE", "RENT_PER_DAY"], default: "FREE" },
-  pricePerDay: { type: Number, default: 0 },
-  depositAmount: { type: Number, default: 0 },
+  pricingType: { type: String, enum: ["FREE", "FOR_SALE"], default: "FREE" },
+  price: { type: Number, default: 0 },             // Exact fixed price for sale items
+  pricePerDay: { type: Number, default: 0 },       // Daily rate (if rental mode enabled)
+  depositAmount: { type: Number, default: 0 },     // Security deposit (0 for sale items)
   status: { type: String, enum: ["AVAILABLE", "BORROWED", "UNAVAILABLE"], default: "AVAILABLE", index: true },
   pickupLocation: { type: String, default: "Central Library / Main Gate" }
 }

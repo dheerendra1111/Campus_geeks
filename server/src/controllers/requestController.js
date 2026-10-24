@@ -72,8 +72,18 @@ export const createRequest = async (req, res, next) => {
     // Calculate duration in days
     const diffTime = Math.abs(end - start);
     const totalDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-    const estimatedCost =
-      item.pricingType === 'RENT_PER_DAY' ? totalDays * item.pricePerDay : 0;
+    
+    // For sale items, cost is the fixed sale price. For rentals, days * pricePerDay.
+    let estimatedCost = 0;
+    let depositAmount = 0;
+
+    if (item.pricingType === 'FOR_SALE') {
+      estimatedCost = item.price || item.pricePerDay || 0;
+      depositAmount = 0; // No deposit for purchased goods
+    } else if (item.pricingType === 'RENT_PER_DAY') {
+      estimatedCost = totalDays * item.pricePerDay;
+      depositAmount = item.depositAmount || 0;
+    }
 
     const request = await BorrowRequest.create({
       item: item._id,
@@ -83,7 +93,7 @@ export const createRequest = async (req, res, next) => {
       endDate: end,
       totalDays,
       estimatedCost,
-      depositAmount: item.depositAmount,
+      depositAmount,
       purpose: purpose || 'Academic course project / exam preparation',
       status: 'PENDING',
     });

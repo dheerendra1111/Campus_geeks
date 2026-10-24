@@ -63,6 +63,11 @@ export const ItemDetailsPage = () => {
 
   // Compute duration and cost dynamically
   const calculateCost = () => {
+    if (item?.pricingType === 'FOR_SALE') {
+      const salePrice = item?.price || item?.pricePerDay || 0;
+      return { days: 1, rentalCost: salePrice, total: salePrice };
+    }
+
     if (!startDate || !endDate) return { days: 0, rentalCost: 0, total: 0 };
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -282,11 +287,20 @@ export const ItemDetailsPage = () => {
             {/* Price Header */}
             <div className="border-b border-slate-100 pb-5">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Rental Terms
+                {item.pricingType === 'FOR_SALE' ? 'Purchase Terms' : 'Rental Terms'}
               </span>
               <div className="mt-1 flex items-baseline justify-between">
                 {item.pricingType === 'FREE' ? (
-                  <div className="text-2xl font-black text-emerald-600">Free Lending</div>
+                  <div className="text-2xl font-black text-emerald-600">Free to Borrow / Take</div>
+                ) : item.pricingType === 'FOR_SALE' ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">
+                      ₹{item.price || item.pricePerDay}
+                    </span>
+                    <span className="text-xs font-bold text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200/60">
+                      Fixed Sale Price
+                    </span>
+                  </div>
                 ) : (
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-slate-900">₹{item.pricePerDay}</span>
@@ -294,7 +308,7 @@ export const ItemDetailsPage = () => {
                   </div>
                 )}
 
-                {item.depositAmount > 0 && (
+                {item.depositAmount > 0 && item.pricingType !== 'FOR_SALE' && (
                   <div className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-xl">
                     ₹{item.depositAmount} Deposit
                   </div>
@@ -325,7 +339,9 @@ export const ItemDetailsPage = () => {
             ) : requestSuccess ? (
               <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-3 animate-in fade-in">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-                <h3 className="text-base font-bold text-emerald-900">Borrow Request Sent!</h3>
+                <h3 className="text-base font-bold text-emerald-900">
+                  {item.pricingType === 'FOR_SALE' ? 'Purchase Request Sent!' : 'Borrow Request Sent!'}
+                </h3>
                 <p className="text-xs text-emerald-700 leading-relaxed">
                   {item.owner?.name} has been notified. Once approved, you can coordinate pickup
                   directly via WhatsApp.
@@ -350,7 +366,7 @@ export const ItemDetailsPage = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Pickup Date
+                      {item.pricingType === 'FOR_SALE' ? 'Meetup Date' : 'Pickup Date'}
                     </label>
                     <input
                       type="date"
@@ -364,7 +380,7 @@ export const ItemDetailsPage = () => {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Return Date
+                      {item.pricingType === 'FOR_SALE' ? 'Target Handover' : 'Return Date'}
                     </label>
                     <input
                       type="date"
@@ -380,11 +396,11 @@ export const ItemDetailsPage = () => {
                 {/* Purpose Note */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Purpose / Note for Lender
+                    {item.pricingType === 'FOR_SALE' ? 'Note for Seller' : 'Purpose / Note for Lender'}
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="e.g. Need for Math exam on Friday morning, will return by 4 PM"
+                    placeholder={item.pricingType === 'FOR_SALE' ? "e.g. Can meet near campus library to buy this item" : "e.g. Need for Math exam on Friday morning, will return by 4 PM"}
                     value={purpose}
                     onChange={(e) => setPurpose(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 focus:outline-none focus:border-brand-500"
@@ -392,32 +408,49 @@ export const ItemDetailsPage = () => {
                 </div>
 
                 {/* Cost Breakdown */}
-                {days > 0 && (
+                {item.pricingType === 'FOR_SALE' ? (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs">
                     <div className="flex justify-between text-slate-600">
-                      <span>Duration:</span>
-                      <span className="font-bold text-slate-900">{days} {days === 1 ? 'day' : 'days'}</span>
+                      <span>Listing Type:</span>
+                      <span className="font-bold text-brand-700">Campus Sale</span>
                     </div>
-
-                    {item.pricingType === 'RENT_PER_DAY' && (
-                      <div className="flex justify-between text-slate-600">
-                        <span>Daily Rental (₹{item.pricePerDay} × {days}d):</span>
-                        <span className="font-bold text-slate-900">₹{rentalCost}</span>
-                      </div>
-                    )}
-
-                    {item.depositAmount > 0 && (
-                      <div className="flex justify-between text-slate-600">
-                        <span>Refundable Deposit:</span>
-                        <span className="font-bold text-emerald-700">+ ₹{item.depositAmount}</span>
-                      </div>
-                    )}
-
+                    <div className="flex justify-between text-slate-600">
+                      <span>Exact Selling Price:</span>
+                      <span className="font-bold text-slate-900">₹{item.price || item.pricePerDay}</span>
+                    </div>
                     <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-sm text-slate-900">
-                      <span>Total on Pickup:</span>
-                      <span className="text-brand-600 font-extrabold">₹{total}</span>
+                      <span>Total on Handover:</span>
+                      <span className="text-brand-600 font-extrabold">₹{item.price || item.pricePerDay}</span>
                     </div>
                   </div>
+                ) : (
+                  days > 0 && (
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                      <div className="flex justify-between text-slate-600">
+                        <span>Duration:</span>
+                        <span className="font-bold text-slate-900">{days} {days === 1 ? 'day' : 'days'}</span>
+                      </div>
+
+                      {item.pricingType === 'RENT_PER_DAY' && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>Daily Rental (₹{item.pricePerDay} × {days}d):</span>
+                          <span className="font-bold text-slate-900">₹{rentalCost}</span>
+                        </div>
+                      )}
+
+                      {item.depositAmount > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>Refundable Deposit:</span>
+                          <span className="font-bold text-emerald-700">+ ₹{item.depositAmount}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-sm text-slate-900">
+                        <span>Total on Pickup:</span>
+                        <span className="text-brand-600 font-extrabold">₹{total}</span>
+                      </div>
+                    </div>
+                  )
                 )}
 
                 {/* Submit Button */}
@@ -428,11 +461,19 @@ export const ItemDetailsPage = () => {
                   isLoading={isSubmitting}
                   className="w-full justify-center text-sm"
                 >
-                  {isAuthenticated ? 'Submit Borrow Request' : 'Sign In to Request'}
+                  {isAuthenticated
+                    ? item.pricingType === 'FOR_SALE'
+                      ? 'Request to Buy Item'
+                      : 'Submit Borrow Request'
+                    : item.pricingType === 'FOR_SALE'
+                    ? 'Sign In to Buy'
+                    : 'Sign In to Request'}
                 </Button>
 
                 <p className="text-[11px] text-center text-slate-400">
-                  No payment required now. Coordinate deposit & terms in person on campus.
+                  {item.pricingType === 'FOR_SALE'
+                    ? 'No online payment required. Pay seller in cash or UPI during in-person handoff.'
+                    : 'No payment required now. Coordinate deposit & terms in person on campus.'}
                 </p>
               </form>
             )}

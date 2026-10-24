@@ -11,6 +11,7 @@ export const ItemCard = ({ item }) => {
     condition,
     images = [],
     pricingType,
+    price,
     pricePerDay,
     depositAmount,
     status,
@@ -64,8 +65,17 @@ export const ItemCard = ({ item }) => {
           <div className="pt-1 flex items-baseline gap-2">
             {pricingType === 'FREE' ? (
               <span className="text-base font-extrabold text-emerald-600">
-                Free to Borrow
+                Free to Take / Borrow
               </span>
+            ) : pricingType === 'FOR_SALE' ? (
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black text-slate-900">
+                  ₹{price || pricePerDay}
+                </span>
+                <span className="text-[11px] font-extrabold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200/60">
+                  For Sale
+                </span>
+              </div>
             ) : (
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-black text-slate-900">
@@ -75,7 +85,7 @@ export const ItemCard = ({ item }) => {
               </div>
             )}
 
-            {depositAmount > 0 && (
+            {depositAmount > 0 && pricingType !== 'FOR_SALE' && (
               <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                 ₹{depositAmount} deposit
               </span>

@@ -15,6 +15,7 @@ export const createItem = async (req, res, next) => {
       category,
       condition,
       pricingType,
+      price,
       pricePerDay,
       depositAmount,
       pickupLocation,
@@ -54,6 +55,12 @@ export const createItem = async (req, res, next) => {
       );
     }
 
+    // Determine normalized pricing
+    const resolvedType = pricingType === 'FOR_SALE' ? 'FOR_SALE' : (pricingType === 'RENT_PER_DAY' ? 'RENT_PER_DAY' : 'FREE');
+    const exactSalePrice = resolvedType === 'FOR_SALE' ? Number(price || pricePerDay) || 0 : 0;
+    const dailyRentalRate = resolvedType === 'RENT_PER_DAY' ? Number(pricePerDay) || 0 : (resolvedType === 'FOR_SALE' ? exactSalePrice : 0);
+    const resolvedDeposit = resolvedType === 'FOR_SALE' ? 0 : (Number(depositAmount) || 0);
+
     const item = await Item.create({
       title,
       description,
@@ -61,9 +68,10 @@ export const createItem = async (req, res, next) => {
       condition: condition || 'Good',
       images: imageUrls,
       owner: req.user._id,
-      pricingType: pricingType || 'FREE',
-      pricePerDay: pricingType === 'RENT_PER_DAY' ? Number(pricePerDay) || 0 : 0,
-      depositAmount: Number(depositAmount) || 0,
+      pricingType: resolvedType,
+      price: exactSalePrice,
+      pricePerDay: dailyRentalRate,
+      depositAmount: resolvedDeposit,
       pickupLocation: pickupLocation || 'Campus Central Library / Main Gate',
     });
 

@@ -55,8 +55,13 @@ const itemSchema = new mongoose.Schema(
     },
     pricingType: {
       type: String,
-      enum: ['FREE', 'RENT_PER_DAY'],
+      enum: ['FREE', 'FOR_SALE', 'RENT_PER_DAY'],
       default: 'FREE',
+    },
+    price: {
+      type: Number,
+      default: 0,
+      min: [0, 'Selling price cannot be negative'],
     },
     pricePerDay: {
       type: Number,

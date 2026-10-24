@@ -98,6 +98,32 @@ test('Item Listings & Catalog API Suite', async (t) => {
     createdItemId = data.data._id;
   });
 
+  await t.test('2b. POST /api/items - creates FOR_SALE item with exact fixed price and 0 deposit', async () => {
+    const res = await fetch(`${baseUrl}/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${lenderToken}`,
+      },
+      body: JSON.stringify({
+        title: 'Casio Scientific Calculator fx-991EX',
+        description: 'ClassWiz advanced scientific calculator, perfect for first year engineering',
+        category: 'Electronics & Kits',
+        condition: 'Like New',
+        pricingType: 'FOR_SALE',
+        price: 450,
+        pickupLocation: 'Hostel 1 Common Room',
+      }),
+    });
+
+    assert.strictEqual(res.status, 201);
+    const data = await res.json();
+    assert.strictEqual(data.success, true);
+    assert.strictEqual(data.data.pricingType, 'FOR_SALE');
+    assert.strictEqual(data.data.price, 450);
+    assert.strictEqual(data.data.depositAmount, 0);
+  });
+
   await t.test('3. GET /api/items - retrieves catalog with pagination', async () => {
     const res = await fetch(`${baseUrl}/items?page=1&limit=10`);
     assert.strictEqual(res.status, 200);

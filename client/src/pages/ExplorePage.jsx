@@ -162,14 +162,14 @@ export const ExplorePage = () => {
               Free Only
             </button>
             <button
-              onClick={() => updateQuery({ pricingType: 'RENT_PER_DAY' })}
+              onClick={() => updateQuery({ pricingType: 'FOR_SALE' })}
               className={`px-3 py-1.5 rounded-xl transition-colors ${
-                pricingTypeParam === 'RENT_PER_DAY'
+                pricingTypeParam === 'FOR_SALE' || pricingTypeParam === 'RENT_PER_DAY'
                   ? 'bg-brand-600 text-white'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Rent per Day
+              For Sale
             </button>
           </div>
 
